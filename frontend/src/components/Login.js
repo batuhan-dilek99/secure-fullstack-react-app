@@ -1,7 +1,7 @@
 import React from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import PropTypes from 'prop-types';
-
+import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
 
 function authentication(creds){
     return fetch("http://127.0.0.1:8081/login", {
@@ -12,9 +12,10 @@ function authentication(creds){
         .then(data => data.json())
 }
 
-function Login({ setToken }){
 
+function Login({ setToken }, token){
 
+    const history = useHistory();
     const submit = async e => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -26,8 +27,16 @@ function Login({ setToken }){
         });
         setToken(token);
         console.log(token);
+        if(token != null){
+            history.push("/home");
+        }
     }
-
+    //console.log("aasdasdasdasd: ", token)
+    // if(token != null){
+    //     console.log("annenisilkeyim");
+    //     history.push("/home");
+    // }
+    //else{
     return(
         <div className='d-flex justify-content-center align-items-center'>
             <div className='p-3 bg-white w-25'>
@@ -45,6 +54,7 @@ function Login({ setToken }){
             </div>
         </div>
     )
+    //}
 }
 
 Login.propTypes = {

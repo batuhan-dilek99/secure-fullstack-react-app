@@ -6,29 +6,33 @@ import Index from './components/index';
 import CreateUser from './components/createuser';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import NavigationBar from './components/navbar';
-import React, { useState } from 'react';
+import React from 'react';
 
+function setToken(userToken){
+  sessionStorage.setItem('token', JSON.stringify(userToken));
+}
+
+function getToken(){
+  const tokenString = sessionStorage.getItem('token');
+  const userToken = JSON.parse(tokenString);
+  return userToken?.token;
+}
 function App() {
-  const [token, setToken] = useState();
+  const token = getToken();
 
-  if(!token){
-    return <Login setToken={setToken} />
-  }
   return (
     <Router>
       <div >
-        <NavigationBar />
+        <NavigationBar getToken={getToken()}/>
         <Switch>
           <Route exact path="/">
             <Index />
           </Route>
-          <Route exact path="/home">
-            <Home />
-          </Route>
+          <Route exact path="/home" render={(props) => token ? <Home /> : <Login setToken={setToken}/>}/>
           <Route exact path="/login">
-            <Login />
+            <Login setToken={setToken}/>
           </Route>
-          <Route exact path="/newAccount">
+          <Route exact path="/newAccount" >
             <CreateUser />
           </Route>
         </Switch>

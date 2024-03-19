@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function CreateUser(){
@@ -15,19 +15,6 @@ function CreateUser(){
             email: formData.get('email'),
         };
 
-        // try{
-        //     const response = await fetch('http://127.0.0.1:8081/createuser',{
-        //         method:'POST',
-        //         body: JSON.stringify(data),
-        //         header: {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*" ,"Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept"},
-        //         mode:'cors',
-        //     });
-        //     if(response.ok){
-        //         console.log("The account hs been Sucessfully created");
-        //     }
-        // }catch (error){
-        //     console.log("Something went wrong");
-        // }
 
         fetch('http://127.0.0.1:8081/createuser',{
             method: 'POST',

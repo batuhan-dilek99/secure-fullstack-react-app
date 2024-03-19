@@ -12,6 +12,10 @@ function authentication(creds){
         .then(data => data.json())
 }
 
+// function redirectToHomePage(){
+//     const history = useHistory();
+//     history.push("/home");
+// }
 
 function Login({ setToken }, token){
 
@@ -26,17 +30,11 @@ function Login({ setToken }, token){
             password,
         });
         setToken(token);
-        console.log(token);
         if(token != null){
             history.push("/home");
+            window.location.reload();
         }
     }
-    //console.log("aasdasdasdasd: ", token)
-    // if(token != null){
-    //     console.log("annenisilkeyim");
-    //     history.push("/home");
-    // }
-    //else{
     return(
         <div className='d-flex justify-content-center align-items-center'>
             <div className='p-3 bg-white w-25'>

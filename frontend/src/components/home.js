@@ -6,14 +6,13 @@ import { useEffect, useState } from 'react';
 
 function Home(){
 
-    //const [userData, verified] = verifyToken();
 
     const [userData, setUserData] = useState({});
     const [token, setToken] = useState('');
     useEffect(() => {
         const token = sessionStorage.getItem('token')
         setToken(token)
-        console.log(token);
+        //console.log(token);
         fetch('http://127.0.0.1:8081/verifyToken', {
             method:'GET',
             headers: {
@@ -21,9 +20,9 @@ function Home(){
             },
         })
             .then((res) => res.json())
-            .then((data) => setUserData(data))
+            .then((data) =>  setUserData(data))
         }, []);
-
+        
     if(token){  
         return (
             <div className="home">

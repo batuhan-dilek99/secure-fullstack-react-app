@@ -154,6 +154,7 @@ app.get("/verifyToken", (req, res) => {
         const verified = jwt.verify(parsedToken.token, jwtSecretKey)
         if (verified) {
             const decodedToken = jwtDecode(parsedToken.token);
+            return res.json(decodedToken);
         } else {
         // Access Denied
         return res.status(401).json({ message: 'error' });

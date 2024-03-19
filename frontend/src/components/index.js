@@ -20,17 +20,24 @@ function Index(){
           .then((data) => setUserData(data))
       }, []);
 
-    // if (!token){
-        
-    // }
-
-    return (
+    console.log(userData);
+    if (token){
+      return(
+        <div>
+          <h2>Index page</h2>
+          <h3>Hey {userData.username} welcome to index page</h3>
+        </div>
+      );
+    }
+    else{
+      return (
         <div>
             <h2>Index page</h2>
             <a href="/login">Please log in here</a>
             <a href="/newAccount">Create a new account</a>
         </div>
     );
+    }
 }
 
 Index.propTypes = {

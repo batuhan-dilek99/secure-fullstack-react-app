@@ -12,10 +12,6 @@ function authentication(creds){
         .then(data => data.json())
 }
 
-// function redirectToHomePage(){
-//     const history = useHistory();
-//     history.push("/home");
-// }
 
 function Login({ setToken }, token){
 

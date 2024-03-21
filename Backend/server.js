@@ -19,42 +19,8 @@ const port = 8081;
 
 //#region functions
 
-function verifyToken(req, res){
-    const tokenHeaderKey = 'jwt-token';
-    const jwtSecretKey = process.env.DIY_JWT_SECRET;
-    const token = req.headers[tokenHeaderKey];
-
-    try{
-        const verified = jwt.verify(token, jwtSecretKey);
-        if(verified){
-            return true;
-        }
-        else{
-            return false;
-        }
-    } catch(error){
-        return false;
-    }
-}
-
 function hash(string){
     return createHash('sha256').update(string).digest('hex');
-}
-
-function createToken(passwordHash, salt){
-    //Creating a user token from the password hash and salt.
-    //This function takes random pieces of the bcrypt hash and concats with the salt value.
-    //After that, the program hashes the string using sha256
-    const lengthOfPasswordHash = passwordHash.length;
-    const randomIndexofPasswordHash = Math.floor(Math.random() * (lengthOfPasswordHash - 12)) + 12;
-    var stringToBeHashed = "";
-    for (let i = 0; i < randomIndexofPasswordHash; i++){
-        console.log(passwordHash.charAt(i));
-        stringToBeHashed = stringToBeHashed + passwordHash.charAt(i);
-    }
-    stringToBeHashed = stringToBeHashed + salt;
-    console.log(stringToBeHashed);
-    return hash(stringToBeHashed);
 }
 
 function createJWTToken(Username, Role){
@@ -97,23 +63,41 @@ app.use('/login', (req, res) => {
     const values = [
         req.body.username,
     ]
-    db.query(sql, [values], (err, data) => {
-        if(err) return res.json("Login Failed");
-        else{
-        console.log(data);
-        const comparison = bcrypt.compareSync(req.body.password, data[0].password_hash);  //Compare the password with the bcrypt version
-        if (comparison){
-            const token = createJWTToken(req.body.username, req.body.isAdmin);
-            console.log("Token: ", token);
-            res.send({
-                token: token,
-            });
+    
+    //Checking if any of the form items are empty or not
+    if(req.body.password == "" || req.body.username == ""){
+        res.status(500).json({
+            token: "isEmpty",   //if it is empty, let frontend know that some parts of the form is empty
+        });
+    }
+    else{
+        try{
+            db.query(sql, [values], (err, data) => {
+                if(err) return res.json({token:"invalidcreds"});
+                else{
+                console.log(data);
+                const comparison = bcrypt.compareSync(req.body.password, data[0].password_hash);  //Compare the password with the bcrypt version
+                if (comparison){
+                    const token = createJWTToken(req.body.username, req.body.isAdmin);
+                    res.cookie("token", token, {
+                        httpOnly: true,
+                        sameSite: "strict",
+                    });
+                    res.send({
+                        token: token,
+                    });
+                }
+                else{
+                    return res.json({token:"Login failed"});  //If login fails due to invalid credentials, let frontend know this situation
+                }
+                }
+            })    
         }
-        else{
-            return res.json("Login Failed");
+        catch(error){
+            console.log("Login failed");
         }
-        }
-    })
+    }
+
 });
 
 app.post('/createuser', async (req, res) => {
@@ -160,7 +144,6 @@ app.get("/verifyToken", (req, res) => {
         return res.status(401).json({ message: 'error' });
         }
     } catch (error) {
-        console.log("an Error");
         // Access Denied
         return res.status(401).json({ message: 'error' });
     }

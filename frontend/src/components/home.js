@@ -12,7 +12,7 @@ function Home(){
     useEffect(() => {
         const token = sessionStorage.getItem('token')
         setToken(token)
-        //console.log(token);
+        console.log(token);
         fetch('http://127.0.0.1:8081/verifyToken', {
             method:'GET',
             headers: {

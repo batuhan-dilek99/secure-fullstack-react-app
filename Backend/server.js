@@ -123,6 +123,16 @@ app.post('/createuser', async (req, res) => {
         return res.json(data);
     })
 });
+
+app.post('/post', (req, res) => {
+    res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
+    const post = req.body.post;
+    const username = req.body.username;
+
+    const query = "INSERT INTO posts (content, UID) VALUES (?, (SELECT UID FROM users WHERE username=?));";
+    db.query(query, [post, username], (err,result) => {
+    });
+});
 //#endregion POST
 
 
@@ -149,6 +159,10 @@ app.get("/verifyToken", (req, res) => {
     }
 });
 
+
+app.get("/getPosts", (req, res) => {
+    
+});
 //#endregion GET
 
 

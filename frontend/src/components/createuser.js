@@ -2,6 +2,7 @@ import React from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState } from 'react';
 import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
+
 function CreateUser(){
 
     const [blacklistFlag, setBlacklistFlag] = useState(0);

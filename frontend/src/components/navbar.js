@@ -20,11 +20,11 @@ function NavigationBar({ getToken }){
                 <Nav.Link href="/home">Home</Nav.Link>
                 <Nav.Link onClick={ logout } href='/'>Logout</Nav.Link>
                 <NavDropdown title="Dropdown" id="basic-nav-dropdown">
-                  <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
+                  <NavDropdown.Item href="/post">Post</NavDropdown.Item>
                   <NavDropdown.Item href="#action/3.2">
-                    Another action
+                    My posts
                   </NavDropdown.Item>
-                  <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
+                  <NavDropdown.Item href="#action/3.3">Account</NavDropdown.Item>
                   <NavDropdown.Divider />
                   <NavDropdown.Item href="#action/3.4">
                     Separated link

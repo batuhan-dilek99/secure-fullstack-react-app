@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import NavigationBar from './components/navbar';
 import React from 'react';
 import CreatePost from './components/createPost';
+import Userpage from './components/userpage';
 
 function setToken(userToken){
   sessionStorage.setItem('token', JSON.stringify(userToken));
@@ -37,6 +38,7 @@ function App() {
             <CreateUser />
           </Route>
           <Route exact path="/post" render={(props) => token ? <CreatePost /> : <Login setToken={setToken}/>}/>
+          <Route path="/userpage" render={(props) => token ? <Userpage /> : <Login setToken={setToken}/>}/>
         </Switch>
       </div>
     </Router>

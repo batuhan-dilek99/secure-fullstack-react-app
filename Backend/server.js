@@ -165,20 +165,24 @@ app.get("/getAllPosts", (req, res) => {
 
     const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID;";
     db.query(sql, (err,data) => {
-        console.log(data);
-        console.log(err);
         return res.send(data);
     })
 });
 
-app.get("/userPage", (req, res) => {
+app.get("/userdata", (req, res) => {
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
-    const UID = req.body.UID;
-
-    const sql = "SELECT * FROM posts WHERE UID=?;"
-    db.query(sql, UID, (err,data) => {
-        console.log(data);
-        console.log(error);
+    
+    let index = req.originalUrl.indexOf("=");
+    console.log(req.originalUrl);
+    let UID = "";
+    for (let i = index + 1; i < req.originalUrl.length; i++){
+        UID = UID + req.originalUrl[i];
+    }
+    console.log("UID : ", UID);
+    const intUID = parseInt(UID, 10);
+    const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID WHERE posts.UID=?;"
+    db.query(sql, intUID, (err,data) => {
+        return res.send(data);
     })
 
 })

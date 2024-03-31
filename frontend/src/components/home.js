@@ -1,21 +1,12 @@
 import React from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useEffect, useState } from 'react';
-//import PropTypes from 'prop-types';
-//import verifyToken from '../utils/verifyToken';
-import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
-import { useNavigate } from 'react-router';
+
 
 
 
 function Home(){
 
-    const navigate = useNavigate();
-
-    const handleClick = (UID) => {
-        console.log(UID);
-        //navigate("/userpage?UID=" + UID);
-    }
     const [userData, setUserData] = useState({});
     const [token, setToken] = useState('');
     const [posts, setPosts] = useState([]);
@@ -53,7 +44,12 @@ function Home(){
                 <tbody>
                     {posts.map((item, index) => (
                         <div style={{border:"solid"}}>
-                            <p key={index} onClick={handleClick(item.UID)}>{item.username}</p>
+                            
+                            <a key={index} href="/userpage?UID=" id={index} onClick={() => {
+                                var url = document.getElementById(index);
+                                console.log(item.UID);
+                                url.href = "/userpage?UID=" + item.UID;
+                            }}>{item.username}</a>
                             <p key={index}>{item.content}</p>
                         </div>    
                     ))}

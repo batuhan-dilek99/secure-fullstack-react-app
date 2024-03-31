@@ -160,9 +160,28 @@ app.get("/verifyToken", (req, res) => {
 });
 
 
-app.get("/getPosts", (req, res) => {
-    
+app.get("/getAllPosts", (req, res) => {
+    res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
+
+    const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID;";
+    db.query(sql, (err,data) => {
+        console.log(data);
+        console.log(err);
+        return res.send(data);
+    })
 });
+
+app.get("/userPage", (req, res) => {
+    res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
+    const UID = req.body.UID;
+
+    const sql = "SELECT * FROM posts WHERE UID=?;"
+    db.query(sql, UID, (err,data) => {
+        console.log(data);
+        console.log(error);
+    })
+
+})
 //#endregion GET
 
 

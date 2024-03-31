@@ -30,19 +30,26 @@ function Userpage(){
     return (
         <div>
             <h4>User : {username}</h4>
-            <tbody>
-                    {posts.map((item, index) => (
-                        <div style={{border:"solid"}}>
-                            
-                            <a key={index} href="/userpage?UID=" id="id" onClick={() => {
-                                console.log("item ID: ", item.UID); 
-                                var url = document.getElementById("id");
-                                url.href = "/userpage?UID=" + item.UID;
-                            }}>{item.username}</a>
-                            <p key={index}>{item.content}</p>
-                        </div>    
-                    ))}
-            </tbody>
+            <div style={{paddingLeft:"33%"}}>
+                    <tbody>
+                        {posts.map((item, index) => (
+                            <tr>
+                                
+                                <div style={{padding:'60px', width:"200%", margin:"auto", border:"solid"}}>
+                                    
+                                    <a key={index} href="/userpage?UID=" id={index} onClick={() => {
+                                        var url = document.getElementById(index);
+                                        console.log(item.UID);
+                                        url.href = "/userpage?UID=" + item.UID;
+                                    }}>{item.username}</a>
+                                    <p key={index}>{item.content}</p>
+                                    <p key={index}>{item.created_at}</p>
+                                </div>    
+                                
+                            </tr>
+                        ))}
+                    </tbody>
+                </div>
         </div>
     );
 }

@@ -1,6 +1,7 @@
 import React from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState }  from 'react';
+import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
 
 function getValue(data, userData, deneme){
     
@@ -16,6 +17,7 @@ function CreatePost(){
     // let userData;
     // let username;
     const [token, setToken] = useState('');
+    const history = useHistory();
     const submit = async e => {
         e.preventDefault()
         const formData = new FormData(e.target);
@@ -44,6 +46,7 @@ function CreatePost(){
                     headers: {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*" ,"Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept"},
                 })
                 .then(res => res.json)
+                .then(history.push("/home"));
             })
     }
 

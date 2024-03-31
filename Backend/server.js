@@ -1,4 +1,4 @@
-
+//#region imports
 const jwt = require('jsonwebtoken');
 const decodeToken = require('react-jwt');
 const express = require('express');
@@ -10,12 +10,15 @@ const bcrypt = require('bcrypt');
 require("dotenv").config();
 const { createHash } = require('crypto');
 const { jwtDecode } = require('jwt-decode');
+//#endregion
 
+//#region config
 app.use(cors());
 app.options(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const port = 8081;
+//#endregion
 
 //#region functions
 
@@ -163,7 +166,7 @@ app.get("/verifyToken", (req, res) => {
 app.get("/getAllPosts", (req, res) => {
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
 
-    const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID;";
+    const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID ORDER BY created_at DESC;";
     db.query(sql, (err,data) => {
         return res.send(data);
     })
@@ -173,14 +176,12 @@ app.get("/userdata", (req, res) => {
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
     
     let index = req.originalUrl.indexOf("=");
-    console.log(req.originalUrl);
     let UID = "";
     for (let i = index + 1; i < req.originalUrl.length; i++){
         UID = UID + req.originalUrl[i];
     }
-    console.log("UID : ", UID);
     const intUID = parseInt(UID, 10);
-    const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID WHERE posts.UID=?;"
+    const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID WHERE posts.UID=? ORDER BY created_at DESC;"
     db.query(sql, intUID, (err,data) => {
         return res.send(data);
     })

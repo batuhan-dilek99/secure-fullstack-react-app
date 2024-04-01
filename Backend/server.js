@@ -136,6 +136,53 @@ app.post('/post', (req, res) => {
     db.query(query, [post, username], (err,result) => {
     });
 });
+
+app.post('/updateAccount', (req, res) => {
+    res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
+    const info = req.body;
+    for (let key in info){
+        let value = info[key];
+    }
+
+    //Form SQL query
+    var sql = "UPDATE users SET ";
+    var sqlData = [];     //key -> value
+    var index;
+    var newUsername;
+    for (let key in info){
+        if(key === "oldusername"){
+           // console.log(key);
+            index = key;
+            continue;
+        }
+        else{
+            var value = info[key];
+            if(key === "username"){
+                newUsername = value;    
+            }
+            sql = sql + key + " = '" + value + "', "; 
+        }
+    }   
+    sqlData.push(info[index]);
+    //console.log(sqlData);
+    var trimmedSql = sql.slice(0, sql.length - 2);
+    trimmedSql = trimmedSql + " WHERE username=" + "'" + info[index] + "';";
+    //console.log(trimmedSql);
+
+    db.query(trimmedSql, (err, data) => {
+        console.log(err);
+    })
+
+    const token = createJWTToken(newUsername, req.body.isAdmin);
+    res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "strict",
+    });
+    res.send({
+        token: token,
+    });
+    
+});
 //#endregion POST
 
 
@@ -174,17 +221,27 @@ app.get("/getAllPosts", (req, res) => {
 
 app.get("/userdata", (req, res) => {
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
-    
-    let index = req.originalUrl.indexOf("=");
-    let UID = "";
-    for (let i = index + 1; i < req.originalUrl.length; i++){
-        UID = UID + req.originalUrl[i];
+
+    if(!req.originalUrl.includes('=null')){
+        let index = req.originalUrl.indexOf("=");
+        let UID = "";
+        for (let i = index + 1; i < req.originalUrl.length; i++){
+            UID = UID + req.originalUrl[i];
+        }
+        const intUID = parseInt(UID, 10);
+        const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID WHERE posts.UID=? ORDER BY created_at DESC;"
+        db.query(sql, intUID, (err,data) => {
+            return res.send(data);
+        })
     }
-    const intUID = parseInt(UID, 10);
-    const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID WHERE posts.UID=? ORDER BY created_at DESC;"
-    db.query(sql, intUID, (err,data) => {
-        return res.send(data);
-    })
+    else{
+        var token = sessionStorage.getItem("token");
+        const jwtSecretKey = process.env.DIY_JWT_SECRET;
+        const verified = jwt.verify(token, jwtSecretKey);
+        if (verified){
+            const decodedJWT = jwtDecode(token);
+        }
+    }
 
 })
 //#endregion GET

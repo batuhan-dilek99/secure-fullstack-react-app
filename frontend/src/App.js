@@ -9,6 +9,8 @@ import NavigationBar from './components/navbar';
 import React from 'react';
 import CreatePost from './components/createPost';
 import Userpage from './components/userpage';
+import FileUpload from './components/fileupload';
+import Account from './components/account';
 
 function setToken(userToken){
   sessionStorage.setItem('token', JSON.stringify(userToken));
@@ -39,6 +41,12 @@ function App() {
           </Route>
           <Route exact path="/post" render={(props) => token ? <CreatePost /> : <Login setToken={setToken}/>}/>
           <Route path="/userpage" render={(props) => token ? <Userpage /> : <Login setToken={setToken}/>}/>
+          <Route exact path="/file">
+            <FileUpload/>
+          </Route>
+          <Route>
+            <Account setToken={setToken}/>
+          </Route>
         </Switch>
       </div>
     </Router>

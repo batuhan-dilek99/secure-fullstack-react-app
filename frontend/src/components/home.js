@@ -33,6 +33,7 @@ function Home(){
         })
     });
     
+
     if(token){  
         return (
             <div className="home">
@@ -47,10 +48,9 @@ function Home(){
                             <tr>
                                 
                                 <div style={{padding:'60px', width:"200%", margin:"auto", border:"solid"}}>
-                                    
-                                    <a key={index} href="/userpage?UID=" id={index} onClick={() => {
+                                    <img src={item.file} style={{width:"50px", height:"50px"}}></img>
+                                    <a key={index} href="/userpage?UID=" id={index} style={{paddingLeft:"10px"}}onClick={() => {
                                         var url = document.getElementById(index);
-                                        console.log(item.UID);
                                         url.href = "/userpage?UID=" + item.UID;
                                     }}>{item.username}</a>
                                     <p key={index}>{item.content}</p>

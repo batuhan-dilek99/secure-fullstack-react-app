@@ -40,6 +40,7 @@ function Login({ setToken }, token){
             //Checking the response coming from backend
             if(!(token.token == "isEmpty") && !(token.token == "Login failed")){  //If login is not failed due to one of these situations;
                 setToken(token);  //Store token
+                console.log("token : " , token);
                 if(token != null){
                     setFlag(0); //set flag to render the normal page
                     history.push("/home"); //redirect user after succesfull login
@@ -50,7 +51,7 @@ function Login({ setToken }, token){
                 if (token.token == "isEmpty"){      //If user fails to fill the form correctly, render a page accordingly
                     setFlag(1);
                 }
-                else if(token.token == "Login failed"){
+                else if(token.token == "Login failed" || token.token == "invalidcreds"){
                     setFlag(2);                     //If login fails due to invalid credentials, render a page accordingly
                 }
             }

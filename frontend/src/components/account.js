@@ -58,8 +58,9 @@ function Account({ setToken }, token){
                     body: JSON.stringify(info),
                     headers: {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*" ,"Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept"},
                 })
-                .then(res => res.json)
+                .then(res => res.json())
                 .then(data => {
+                    sessionStorage.setItem('token', JSON.stringify(data));  //Read the new token with new username and store it into browser. 
                 })
             })
 

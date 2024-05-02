@@ -1,59 +1,6 @@
-import React from 'react'
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
-
-
-
-
-function Home(){
-
-    const [userToken, setUserToken] = useState({});
-    const [token, setToken] = useState('');
-    const [posts, setPosts] = useState([]);
-    const [userData, setUserData] = useState([]);
-    const history = useHistory();
-    useEffect(() => {
-        const token = sessionStorage.getItem('token')
-        setToken(token)
-        fetch('http://127.0.0.1:8081/verifyToken', {
-            method:'GET',
-            headers: {
-            'jwt-token': token,
-            },
-        })
-            .then((res) => {
-              if(res.status === 200){
-                res.json();
-              } 
-              else{
-                history.push('/');
-              }
-            }) 
-            .then((data) =>  {
-                setUserToken(data);
-            })
-        }, []);
-
-    useEffect(() => {
-        fetch('http://127.0.0.1:8081/getAllPosts', {
-            method:'GET',
-        })
-        .then(res => res.json())
-        .then(data => {
-            setPosts(data);
-        })
-    });
-
-    // const jsonData = {
-    //     username:userToken.username,
-    // }
-
-    
-
-    if(token){  
-        return (
-            <div className="w3-container w3-content" style={{maxWidth: '1400px', marginTop: '80px'}}>    
+function Deneme(){
+    return(
+                <div className="w3-container w3-content" style={{maxWidth: '1400px', marginTop: '80px'}}>    
                   {/* The Grid */}
                   <div className="w3-row">
                     {/* Left Column */}
@@ -62,7 +9,7 @@ function Home(){
                       <div className="w3-card w3-round w3-white">
                         <div className="w3-container">
                           <h4 className="w3-center">My Profile</h4>
-                          <p className="w3-center"><img src="" className="w3-circle" style={{height: '106px', width: '106px'}} alt="Avatar" /></p>
+                          <p className="w3-center"><img src="/w3images/avatar3.png" className="w3-circle" style={{height: '106px', width: '106px'}} alt="Avatar" /></p>
                           <hr />
                           <p><i className="fa fa-pencil fa-fw w3-margin-right w3-text-theme" /> Designer, UI</p>
                           <p><i className="fa fa-home fa-fw w3-margin-right w3-text-theme" /> London, UK</p>
@@ -152,20 +99,19 @@ function Home(){
                         </div>
                       </div>
                       {posts.map((item, index) => (
-                            
+                            <tr>
                                 
                                 <div className="w3-container w3-card w3-white w3-round w3-margin"><br />
-                                    <img src={item.file} className="w3-left w3-circle w3-margin-right" style={{width: '60px'}}></img>
-                                    <span className="w3-right w3-opacity">{item.created_at}</span>
+                                    <img src={item.file} style={{width:"50px", height:"50px"}}></img>
                                     <a key={index} href="/userpage?UID=" id={index} alt="Avatar" className="w3-left w3-circle w3-margin-right" style={{width: '60px'}}onClick={() => {
                                         var url = document.getElementById(index);
                                         url.href = "/userpage?UID=" + item.UID;
                                     }}>{item.username}</a>
-                                    <hr className="w3-clear" />
                                     <p key={index}>{item.content}</p>
+                                    <p key={index}>{item.created_at}</p>
                                 </div>    
                                 
-                            
+                            </tr>
                         ))}
                       {/* End Middle Column */}
                     </div>
@@ -210,15 +156,8 @@ function Home(){
                   </div>
                   {/* End Page Container */}
                 </div>
-        );
-    }
-    else{
-        return(
-            <div className="home">
-                <h2>Must sign in first</h2>
-            </div>
-        );
-    }
+              );
+            }
+          });
+    )
 }
-
-export default Home;

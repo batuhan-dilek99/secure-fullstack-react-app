@@ -8,17 +8,17 @@ function Index(){
 
     const [userData, setUserData] = useState({});
     const [token, setToken] = useState('');
-    useEffect(() => {
-        const token = sessionStorage.getItem('jwt-token')
-        setToken(token)
-        fetch('http://127.0.0.1:8081/verifyToken', {
-          headers: {
-            'jwt-token': token,
-          },
-        })
-          .then((res) => res.json())
-          .then((data) => setUserData(data))
-      }, []);
+    // useEffect(() => {
+    //     const token = sessionStorage.getItem('jwt-token')
+    //     setToken(token)
+    //     fetch('http://127.0.0.1:8081/verifyToken', {
+    //       headers: {
+    //         'jwt-token': token,
+    //       },
+    //     })
+    //       .then((res) => res.json())
+    //       .then((data) => setUserData(data))
+    //   }, []);
 
     console.log(userData);
     if (token){

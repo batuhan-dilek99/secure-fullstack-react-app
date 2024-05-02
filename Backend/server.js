@@ -10,6 +10,7 @@ const bcrypt = require('bcrypt');
 require("dotenv").config();
 const { createHash } = require('crypto');
 const { jwtDecode } = require('jwt-decode');
+const { useState } = require('react');
 //#endregion
 
 //#region config
@@ -20,24 +21,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const port = 8081;
 //#endregion
 
-//#region functions
-
-function hash(string){
-    return createHash('sha256').update(string).digest('hex');
-}
-
-function createJWTToken(Username, Role){
-    let data={
-        signInTime: Date.now(),
-        username: Username,
-        role: Role,
-    }
-    const jwtSecretKey = process.env.DIY_JWT_SECRET;
-    const token = jwt.sign(data, jwtSecretKey);
-    return token;
-}
-//#endregion functions
-
 //#region DB connection
 const db = mysql.createConnection({
     host: "localhost",
@@ -47,7 +30,47 @@ const db = mysql.createConnection({
     port: '/var/run/mysqld/mysqld.sock',
 
 });
+//#endregion DB connection
 
+//#region functions
+
+
+async function JWTSigner(username, sql) {
+    return await new Promise(function (resolve, reject) {
+        db.query(sql, username, (err,data) => {
+            passwordFromDB = data[0].password_hash;
+            let password_hash = createHash('sha256').update(passwordFromDB).digest('hex');   //Storing the sha256 hashed version of the bcrypted hash of the password
+            let tokenData={                                                                  //to be able to mitigate cookie related broken authentications. 
+                signInTime: Date.now(),                                                      //This sha256 hash will be compared to the original password when trying to log in
+                username: username,
+                ph: password_hash,
+                //Add a random data to randomize the token
+            }
+            const jwtSecretKey = process.env.DIY_JWT_SECRET;
+            const signedJWT = jwt.sign(tokenData, jwtSecretKey);
+            resolve(signedJWT);
+        });
+    })
+}
+async function createJWTToken(bool, username){
+    //Using username and a date to keep track on the user.
+    let rand = (Math.random() + 1).toString(36).substring(16);
+    if (bool){
+        const sql = "SELECT password_hash FROM users WHERE username=?";
+        JWTSigner(username, sql).then(function(results){
+            res.cookie("token", results, {
+                httpOnly: true,
+                sameSite: "strict",
+            });
+            res.send({
+                token: results,
+            });
+        });
+    }
+}
+//#endregion functions
+
+//#region DB connection
 db.connect(e => {
     if(e){
         console.log("Database connection failed", e);
@@ -62,11 +85,10 @@ db.connect(e => {
 app.use('/login', (req, res) => {
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
 
-    const sql = "SELECT password_hash, salt, isAdmin FROM users WHERE username = ?" // sql command to retrieve passwords and salt values from db.
+    const sql = "SELECT password_hash, isAdmin FROM users WHERE username = ?" // sql command to retrieve passwords and salt values from db.
     const values = [
         req.body.username,
     ]
-    
     //Checking if any of the form items are empty or not
     if(req.body.password == "" || req.body.username == ""){
         res.status(500).json({
@@ -76,18 +98,24 @@ app.use('/login', (req, res) => {
     else{
         try{
             db.query(sql, [values], (err, data) => {
-                if(err) return res.json({token:"invalidcreds"});
+                if(err) {
+                    console.log(err);
+                    return res.json({token:"invalidcreds"}
+                )}
                 else{
-                console.log(data);
                 const comparison = bcrypt.compareSync(req.body.password, data[0].password_hash);  //Compare the password with the bcrypt version
-                if (comparison){
-                    const token = createJWTToken(req.body.username, req.body.isAdmin);
-                    res.cookie("token", token, {
-                        httpOnly: true,
-                        sameSite: "strict",
-                    });
-                    res.send({
-                        token: token,
+
+                //Create a JWT token to keep track of the user. 
+                if (comparison){ //If password is correct,
+                    const sql = "SELECT password_hash FROM users WHERE username=?";
+                    JWTSigner(req.body.username, sql).then(function(results){
+                        res.cookie("token", results, {
+                            httpOnly: true,
+                            sameSite: "strict",
+                        });
+                        res.send({
+                            token: results,
+                        });
                     });
                 }
                 else{
@@ -103,23 +131,35 @@ app.use('/login', (req, res) => {
 
 });
 
+app.post('/userdata', (req,res) => {
+    res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
+    const sql = "SELECT username, file FROM users WHERE username=?;"
+    const uname = req.body.username;
+    db.query(sql, uname, (err,data) =>{
+        return res.send(data);
+    })
+})
+
 app.post('/createuser', async (req, res) => {
     
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
     const password = req.body.password;
     const saltRounds = 10;
 
-    //Store salt value with the password into database
+    //Salt is for bcrypt to encrypt the password
     const salt = bcrypt.genSaltSync(saltRounds);
     const encryptedPassword = bcrypt.hashSync(password, salt);
 
+    //Gathering all data into an object.
     const values = [
         req.body.email,
         req.body.username,
         encryptedPassword,
-        salt,
     ];
-    const sql = "INSERT INTO users (email, username, password_hash, salt) VALUES (?);";
+
+    //Forging SQL query to store user information
+    const sql = "INSERT INTO users (email, username, password_hash) VALUES (?);";
+    //DB query
     db.query(sql, [values], (err,data) => {
         if(err) return res.json("Signup failed");
 
@@ -127,7 +167,7 @@ app.post('/createuser', async (req, res) => {
     })
 });
 
-app.post('/post', (req, res) => {
+app.post('/post', (req, res) => { //end-point for users to post something
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
     const post = req.body.post;
     const username = req.body.username;
@@ -137,42 +177,50 @@ app.post('/post', (req, res) => {
     });
 });
 
-app.post('/updateAccount', (req, res) => {
+app.post('/updateAccount', (req, res) => { //User update end-point
+    const saltRounds = 10;
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
     const info = req.body;
-    for (let key in info){
-        let value = info[key];
-    }
 
     //Form SQL query
     var sql = "UPDATE users SET ";
     var sqlData = [];     //key -> value
     var index;
     var newUsername;
-    for (let key in info){
-        if(key === "oldusername"){
-           // console.log(key);
-            index = key;
+    for (let key in info){ //iterate over the parameters. (password, username, etc.)
+        if(key === "oldusername"){   //If there is the oldusername item in JSON, assume username is not changed
+            index = key;            // Set index to key
             continue;
         }
         else{
             var value = info[key];
-            if(key === "username"){
+            if(key === "username"){   //If there is a username column in the JSON, Assume it is a new username
                 newUsername = value;    
             }
-            sql = sql + key + " = '" + value + "', "; 
+            if(key === "password"){   //If password input is not empty, create new generated password and send it to server. 
+                const salt = bcrypt.genSaltSync(saltRounds);
+                const encryptedPassword = bcrypt.hashSync(info[key], salt);
+                value = encryptedPassword;            
+                key = "password_hash";
+            }
+            sql = sql + key + " = '" + value + "', ";   //This line forges a SQL query with the key values inside fo info. Info contains the input names and values. 
+                                                        //based on the names and values it forms key = value, string and attaches to the base string. 
+                                                        // At the end, the query will be finalazed by adding the condition. 
+            //console.log(sql);   Uncomment this line to see the full output.
         }
     }   
+
+    //Here, the condition for the SQL query is added. WHERE username = <old_username>;
     sqlData.push(info[index]);
-    //console.log(sqlData);
     var trimmedSql = sql.slice(0, sql.length - 2);
     trimmedSql = trimmedSql + " WHERE username=" + "'" + info[index] + "';";
-    //console.log(trimmedSql);
 
     db.query(trimmedSql, (err, data) => {
         console.log(err);
     })
 
+
+    //Creating a new token with the new username, sending it to the frontend.
     const token = createJWTToken(newUsername, req.body.isAdmin);
     res.cookie("token", token, {
         httpOnly: true,
@@ -193,16 +241,26 @@ app.get("/verifyToken", (req, res) => {
     const tokenHeaderKey = 'jwt-token';
     const jwtSecretKey = process.env.DIY_JWT_SECRET;
     const token = req.headers[tokenHeaderKey];
+    var parsedToken = JSON.parse(token);
+    const sql = "SELECT password_hash FROM users WHERE username=?";
+
     try {
-        var parsedToken = JSON.parse(token);
-        const verified = jwt.verify(parsedToken.token, jwtSecretKey)
-        if (verified) {
+        jwt.verify(parsedToken.token, jwtSecretKey, function(err, decoded) { //Verifying the signature of the JWT
             const decodedToken = jwtDecode(parsedToken.token);
-            return res.json(decodedToken);
-        } else {
-        // Access Denied
-        return res.status(401).json({ message: 'error' });
-        }
+            const username = decodedToken.username;
+            const password_hash = decodedToken.ph;   //Getting the sha256 hashed password from the token. 
+            db.query(sql, username, (err,data) => {
+                let DBpassword = data[0].password_hash;        //Getting the original bcrypt hash to compare with the one from the token
+                let sha256DBpassword = createHash('sha256').update(DBpassword).digest('hex'); //Hashing the original bcrypt
+                const passVerified = sha256DBpassword == decodedToken.ph ? true : false;   //Check if the hashes are the same
+                if(passVerified){
+                    return res.status(200).json(decodedToken);   //If yes, let the user in
+                }
+                else{
+                    return res.status(401).json({ message: 'error' });        //If not, do not let the user in
+                }
+            });
+        })
     } catch (error) {
         // Access Denied
         return res.status(401).json({ message: 'error' });
@@ -210,7 +268,7 @@ app.get("/verifyToken", (req, res) => {
 });
 
 
-app.get("/getAllPosts", (req, res) => {
+app.get("/getAllPosts", (req, res) => { //Homepage endpoint. fetches all posts.
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
 
     const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID ORDER BY created_at DESC;";
@@ -219,17 +277,17 @@ app.get("/getAllPosts", (req, res) => {
     })
 });
 
-app.get("/userdata", (req, res) => {
+app.get("/userposts", (req, res) => {  //This is the endpoint to fetch all posts for only one user.
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
 
-    if(!req.originalUrl.includes('=null')){
+    if(!req.originalUrl.includes('=null')){  //if the parameter is null
         let index = req.originalUrl.indexOf("=");
         let UID = "";
         for (let i = index + 1; i < req.originalUrl.length; i++){
             UID = UID + req.originalUrl[i];
         }
         const intUID = parseInt(UID, 10);
-        const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID WHERE posts.UID=? ORDER BY created_at DESC;"
+        const sql = "SELECT * FROM posts LEFT JOIN users ON posts.UID=users.UID WHERE posts.UID=? ORDER BY created_at DESC;" //Select all the posts of the given UID
         db.query(sql, intUID, (err,data) => {
             return res.send(data);
         })

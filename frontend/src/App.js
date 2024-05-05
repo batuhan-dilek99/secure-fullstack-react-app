@@ -7,7 +7,6 @@ import CreateUser from './components/createuser';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import NavigationBar from './components/navbar';
 import React from 'react';
-import CreatePost from './components/createPost';
 import Userpage from './components/userpage';
 import FileUpload from './components/fileupload';
 import Account from './components/account';
@@ -44,7 +43,6 @@ function App() {
           <Route exact path="/newAccount" >
             <CreateUser />
           </Route>
-          <Route exact path="/post" render={(props) => token ? <CreatePost /> : <Login setToken={setToken}/>}/>
           <Route path="/userpage" render={(props) => token ? <Userpage /> : <Login setToken={setToken}/>}/>
           <Route exact path="/file">
             <FileUpload/>

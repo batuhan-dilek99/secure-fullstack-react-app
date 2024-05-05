@@ -13,7 +13,7 @@ function CreateUser(){
         const formData = new FormData(e.target);
 
         //Input validation for user creation
-        const blacklist = ["'", ";", "{", "}", "*", "<", ">", "/"];  //Blacklisting some basic characters.  May include words as well.
+        const blacklist = ["'", ";", "{", "}", "*", "<", ">", "/", "="];  //Blacklisting some basic characters.  May include words as well.
         var flag = 0;
         const username = formData.get('username');
         const password = formData.get('password');

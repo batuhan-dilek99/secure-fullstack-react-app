@@ -84,56 +84,71 @@ db.connect(e => {
 //#region POST
 app.use('/login', (req, res) => {
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
-
-    const sql = "SELECT password_hash, isAdmin FROM users WHERE username = ?" // sql command to retrieve passwords and salt values from db.
-    const values = [
-        req.body.username,
-    ]
-    //Checking if any of the form items are empty or not
-    if(req.body.password == "" || req.body.username == ""){
-        res.status(500).json({
-            token: "isEmpty",   //if it is empty, let frontend know that some parts of the form is empty
+    
+    //SQL Injection Detection
+    const reg = /--|"|'|[1=1]|-|=|{|}/gi  //Regex case to detect any input with the intentions of SQLi
+    if(reg.test(req.body.username)){
+        res.status(500).send({
+            token:500,
         });
     }
     else{
-        try{
-            db.query(sql, [values], (err, data) => {
-                if(err) {
-                    console.log(err);
-                    return res.json({token:"invalidcreds"}
-                )}
-                else{
-                const comparison = bcrypt.compareSync(req.body.password, data[0].password_hash);  //Compare the password with the bcrypt version
-
-                //Create a JWT token to keep track of the user. 
-                if (comparison){ //If password is correct,
-                    const sql = "SELECT password_hash FROM users WHERE username=?";
-                    JWTSigner(req.body.username, sql).then(function(results){
-                        res.cookie("token", results, {
-                            httpOnly: true,
-                            sameSite: "strict",
-                        });
-                        res.send({
-                            token: results,
-                        });
-                    });
-                }
-                else{
-                    return res.json({token:"Login failed"});  //If login fails due to invalid credentials, let frontend know this situation
-                }
-                }
-            })    
+        const sql = "SELECT password_hash, isAdmin FROM users WHERE username = ?" // sql command to retrieve passwords and salt values from db.
+        const values = [
+            req.body.username,
+        ]
+        //Checking if any of the form items are empty or not
+        if(req.body.password == "" || req.body.username == ""){
+            res.status(501).send({
+                token: 501
+            }); //if it is empty, let frontend know that some parts of the form is empty
         }
-        catch(error){
-            console.log("Login failed");
+        else{
+            try{
+                db.query(sql, [values], (err, data) => {
+                    if(err) {
+                        console.log(err);
+                        return res.status(502).send({
+                            status:502,
+                        });
+                    }
+                    else{
+                    const comparison = bcrypt.compareSync(req.body.password, data[0].password_hash);  //Compare the password with the bcrypt version
+
+                    //Create a JWT token to keep track of the user. 
+                    if (comparison){ //If password is correct,
+                        const sql = "SELECT password_hash FROM users WHERE username=?";
+                        JWTSigner(req.body.username, sql).then(function(results){
+                            res.cookie("token", results, {
+                                httpOnly: true,
+                                sameSite: "strict",
+                            });
+                            res.status(200).send({
+                                token: results,
+                            });
+                            
+                        });
+                    }
+                    else{
+                        return res.status(503).send({
+                            token:503
+                        });  //If login fails due to invalid credentials, let frontend know this situation
+                    }
+                    }
+                })    
+            }
+            catch(error){
+                console.log("Login failed");
+            }
         }
     }
+
 
 });
 
 app.post('/userdata', (req,res) => {
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
-    const sql = "SELECT username, file FROM users WHERE username=?;"
+    const sql = "SELECT username, file, UID FROM users WHERE username=?;"
     const uname = req.body.username;
     db.query(sql, uname, (err,data) =>{
         return res.send(data);
@@ -177,58 +192,94 @@ app.post('/post', (req, res) => { //end-point for users to post something
     });
 });
 
+app.post('/search', (req,res) => {
+    res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
+    const reg = /--|"|'|[1=1]|-|=|{|}/gi ;
+    if (!reg.test(req.body.search)){
+        const sql = "SELECT username, UID, file FROM users WHERE username=?"
+    
+        try{
+            db.query(sql, req.body.search, (err,data) => {
+                if(data.length === 0){
+                    res.send(JSON.stringify({result:false,search:req.body.search}))
+                }
+                else{
+                    res.send({result:data, search:req.body.search});
+                }
+            });
+        }
+        catch(error){
+            console.log("An error has been occured");
+        }
+    }
+    else{
+        res.send({result:[], search:req.body.search});
+    }
+})
+
 app.post('/updateAccount', (req, res) => { //User update end-point
     const saltRounds = 10;
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');
-    const info = req.body;
-
     //Form SQL query
     var sql = "UPDATE users SET ";
     var sqlData = [];     //key -> value
     var index;
     var newUsername;
-    for (let key in info){ //iterate over the parameters. (password, username, etc.)
-        if(key === "oldusername"){   //If there is the oldusername item in JSON, assume username is not changed
-            index = key;            // Set index to key
-            continue;
-        }
-        else{
-            var value = info[key];
-            if(key === "username"){   //If there is a username column in the JSON, Assume it is a new username
-                newUsername = value;    
+
+    console.log(req.body);
+
+    try{
+        const info = req.body;
+        var userNameChange = 0;
+        for (let key in info){ //iterate over the parameters. (password, username, etc.)
+            if(key === "oldusername"){   //If there is the oldusername item in JSON, assume username is not changed
+                index = key;            // Set index to key
+                continue;
             }
-            if(key === "password"){   //If password input is not empty, create new generated password and send it to server. 
-                const salt = bcrypt.genSaltSync(saltRounds);
-                const encryptedPassword = bcrypt.hashSync(info[key], salt);
-                value = encryptedPassword;            
-                key = "password_hash";
+            else{
+                var value = info[key];
+                if(key === "username"){   //If there is a username column in the JSON, Assume it is a new username
+                    newUsername = value;    
+                    userNameChange = 1;
+                }
+                if(key === "password"){   //If password input is not empty, create new generated password and send it to server. 
+                    const salt = bcrypt.genSaltSync(saltRounds);
+                    const encryptedPassword = bcrypt.hashSync(info[key], salt);
+                    value = encryptedPassword;            
+                    key = "password_hash";
+                }
+                sql = sql + key + " = '" + value + "', ";   //This line forges a SQL query with the key values inside fo info. Info contains the input names and values. 
+                                                            //based on the names and values it forms key = value, string and attaches to the base string. 
+                                                            // At the end, the query will be finalazed by adding the condition. 
+                //console.log(sql);   //Uncomment this line to see the full output.
             }
-            sql = sql + key + " = '" + value + "', ";   //This line forges a SQL query with the key values inside fo info. Info contains the input names and values. 
-                                                        //based on the names and values it forms key = value, string and attaches to the base string. 
-                                                        // At the end, the query will be finalazed by adding the condition. 
-            //console.log(sql);   Uncomment this line to see the full output.
+        }   
+    
+        //Here, the condition for the SQL query is added. WHERE username = <old_username>;
+        sqlData.push(info[index]);
+        var trimmedSql = sql.slice(0, sql.length - 2);
+        trimmedSql = trimmedSql + " WHERE username=" + "'" + info[index] + "';";
+    
+        db.query(trimmedSql, (err, data) => {
+            //console.log(err);
+        })
+    
+    
+        //Creating a new token with the new username, sending it to the frontend.
+        if(userNameChange){
+            const token = createJWTToken(newUsername, req.body.isAdmin);
+            res.cookie("token", token, {
+                httpOnly: true,
+                sameSite: "strict",
+            });
+            res.send({
+                token: token,
+            });   
         }
-    }   
-
-    //Here, the condition for the SQL query is added. WHERE username = <old_username>;
-    sqlData.push(info[index]);
-    var trimmedSql = sql.slice(0, sql.length - 2);
-    trimmedSql = trimmedSql + " WHERE username=" + "'" + info[index] + "';";
-
-    db.query(trimmedSql, (err, data) => {
-        console.log(err);
-    })
-
-
-    //Creating a new token with the new username, sending it to the frontend.
-    const token = createJWTToken(newUsername, req.body.isAdmin);
-    res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "strict",
-    });
-    res.send({
-        token: token,
-    });
+    }
+    catch(error){
+        console.log("Error");
+    }
     
 });
 //#endregion POST
@@ -243,7 +294,6 @@ app.get("/verifyToken", (req, res) => {
     const token = req.headers[tokenHeaderKey];
     var parsedToken = JSON.parse(token);
     const sql = "SELECT password_hash FROM users WHERE username=?";
-
     try {
         jwt.verify(parsedToken.token, jwtSecretKey, function(err, decoded) { //Verifying the signature of the JWT
             const decodedToken = jwtDecode(parsedToken.token);
@@ -266,7 +316,6 @@ app.get("/verifyToken", (req, res) => {
         return res.status(401).json({ message: 'error' });
     }
 });
-
 
 app.get("/getAllPosts", (req, res) => { //Homepage endpoint. fetches all posts.
     res.set('Acces-Control-Allow-Origin', 'http://127.0.0.1:3000');

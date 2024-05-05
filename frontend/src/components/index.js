@@ -31,11 +31,25 @@ function Index(){
     }
     else{
       return (
-        <div>
-            <h2>Index page</h2>
-            <a href="/login">Please log in here</a>
-            <a href="/newAccount">Create a new account</a>
+        <div className='w3-row'>
+          <div className='w3-col l3'>
+            <p></p>
+          </div>
+          <div className="w3-container w3-card w3-white w3-round w3-margin w3-col l6"><br />
+            <div className='w3-row'>
+              <div className='w3-col l3'><p></p></div>
+              <div className='w3-col l6'>
+                <h1 style={{display:'flex',justifyContent:'center',alignItems:'center'}} className='w3-col'>Welcome to TUNITTER</h1>
+                <a href="/login" style={{display:'flex',justifyContent:'center',alignItems:'center', paddingRight:'20px'}} className='btn btn-success w3-deep-purple'>Log in</a><br></br><br></br>
+                <a href="/newAccount" style={{display:'flex',justifyContent:'center',alignItems:'center'}} className='btn btn-success w3-deep-purple'>Create a new account</a><br></br>
+              </div>
+              <div className='w3-col l3'></div>
+            </div>
+          </div>
+          <div className='w3-col l3'>
+          </div>    
         </div>
+  
     );
     }
 }

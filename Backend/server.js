@@ -19,9 +19,7 @@ app.options(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const port = 8081;
-//#endregion
 
-//#region DB connection
 const db = mysql.createConnection({
     host: "localhost",
     user: "dbuser",
@@ -30,7 +28,6 @@ const db = mysql.createConnection({
     port: '/var/run/mysqld/mysqld.sock',
 
 });
-//#endregion DB connection
 
 //#region functions
 
@@ -226,60 +223,65 @@ app.post('/updateAccount', (req, res) => { //User update end-point
     var index;
     var newUsername;
 
-    console.log(req.body);
-
-    try{
-        const info = req.body;
-        var userNameChange = 0;
-        for (let key in info){ //iterate over the parameters. (password, username, etc.)
-            if(key === "oldusername"){   //If there is the oldusername item in JSON, assume username is not changed
-                index = key;            // Set index to key
-                continue;
-            }
-            else{
-                var value = info[key];
-                if(key === "username"){   //If there is a username column in the JSON, Assume it is a new username
-                    newUsername = value;    
-                    userNameChange = 1;
+    const reg = /<|>|script|alert()|onError()/gi  //Regex case to detect any input with the intentions of XSS
+    if(reg.test(req.body.username)){
+        res.status(500)
+    }
+    else{
+        try{
+            const info = req.body;
+            var userNameChange = 0;
+            for (let key in info){ //iterate over the parameters. (password, username, etc.)
+                if(key === "oldusername"){   //If there is the oldusername item in JSON, assume username is not changed
+                    index = key;            // Set index to key
+                    continue;
                 }
-                if(key === "password"){   //If password input is not empty, create new generated password and send it to server. 
-                    const salt = bcrypt.genSaltSync(saltRounds);
-                    const encryptedPassword = bcrypt.hashSync(info[key], salt);
-                    value = encryptedPassword;            
-                    key = "password_hash";
+                else{
+                    var value = info[key];
+                    if(key === "username"){   //If there is a username column in the JSON, Assume it is a new username
+                        newUsername = value;    
+                        userNameChange = 1;
+                    }
+                    if(key === "password"){   //If password input is not empty, create new generated password and send it to server. 
+                        const salt = bcrypt.genSaltSync(saltRounds);
+                        const encryptedPassword = bcrypt.hashSync(info[key], salt);
+                        value = encryptedPassword;            
+                        key = "password_hash";
+                    }
+                    sql = sql + key + " = '" + value + "', ";   //This line forges a SQL query with the key values inside fo info. Info contains the input names and values. 
+                                                                //based on the names and values it forms key = value, string and attaches to the base string. 
+                                                                // At the end, the query will be finalazed by adding the condition. 
+                    //console.log(sql);   //Uncomment this line to see the full output.
                 }
-                sql = sql + key + " = '" + value + "', ";   //This line forges a SQL query with the key values inside fo info. Info contains the input names and values. 
-                                                            //based on the names and values it forms key = value, string and attaches to the base string. 
-                                                            // At the end, the query will be finalazed by adding the condition. 
-                //console.log(sql);   //Uncomment this line to see the full output.
+            }   
+        
+            //Here, the condition for the SQL query is added. WHERE username = <old_username>;
+            sqlData.push(info[index]);
+            var trimmedSql = sql.slice(0, sql.length - 2);
+            trimmedSql = trimmedSql + " WHERE username=" + "'" + info[index] + "';";
+        
+            db.query(trimmedSql, (err, data) => {
+                //console.log(err);
+            })
+        
+        
+            //Creating a new token with the new username, sending it to the frontend.
+            if(userNameChange){
+                const token = createJWTToken(newUsername, req.body.isAdmin);
+                res.cookie("token", token, {
+                    httpOnly: true,
+                    sameSite: "strict",
+                });
+                res.send({
+                    token: token,
+                });   
             }
-        }   
-    
-        //Here, the condition for the SQL query is added. WHERE username = <old_username>;
-        sqlData.push(info[index]);
-        var trimmedSql = sql.slice(0, sql.length - 2);
-        trimmedSql = trimmedSql + " WHERE username=" + "'" + info[index] + "';";
-    
-        db.query(trimmedSql, (err, data) => {
-            //console.log(err);
-        })
-    
-    
-        //Creating a new token with the new username, sending it to the frontend.
-        if(userNameChange){
-            const token = createJWTToken(newUsername, req.body.isAdmin);
-            res.cookie("token", token, {
-                httpOnly: true,
-                sameSite: "strict",
-            });
-            res.send({
-                token: token,
-            });   
+        }
+        catch(error){
+            console.log("Error");
         }
     }
-    catch(error){
-        console.log("Error");
-    }
+
     
 });
 //#endregion POST

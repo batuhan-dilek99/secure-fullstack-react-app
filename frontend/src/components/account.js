@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import PropTypes from 'prop-types';
 import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
 
-function Account({ setToken }, token){
+function Account(){
 
     var success = 1;
     const history = useHistory();

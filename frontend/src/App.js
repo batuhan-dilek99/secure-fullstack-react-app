@@ -8,8 +8,8 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import NavigationBar from './components/navbar';
 import React from 'react';
 import Userpage from './components/userpage';
-import FileUpload from './components/fileupload';
 import Account from './components/account';
+import PageNotFound from './components/404Page';
 
 function setToken(userToken){
   sessionStorage.setItem('token', JSON.stringify(userToken));
@@ -40,15 +40,15 @@ function App() {
           <Route exact path="/login">
             <Login setToken={setToken}/>
           </Route>
-          <Route exact path="/newAccount" >
+          <Route exact path="/newAccount" render={(props) => token ? <Home /> : <Login setToken={setToken}/>}>
             <CreateUser />
           </Route>
           <Route path="/userpage" render={(props) => token ? <Userpage /> : <Login setToken={setToken}/>}/>
-          <Route exact path="/file">
-            <FileUpload/>
+          <Route exact path="/account" render={(props) => token ? <Account /> : <Login setToken={setToken}/>}>
+            <Account/>
           </Route>
-          <Route>
-            <Account setToken={setToken}/>
+          <Route path='*'>
+            <PageNotFound/>
           </Route>
         </Switch>
       </div>

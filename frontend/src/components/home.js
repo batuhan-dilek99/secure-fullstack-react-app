@@ -146,7 +146,7 @@ function Home(){
                           <hr />
                           <a href='/home'><i className="fa fa-home fa-fw w3-margin-right w3-text-theme" />Homepage</a><br></br>
                           <a href='/account'><i className="fa fa-pencil fa-fw w3-margin-right w3-text-theme" />Manage account</a>
-                          <p><i className="fa fa-birthday-cake fa-fw w3-margin-right w3-text-theme" /> April 1, 1988</p>
+                          <p></p>
                         </div>
                       </div>
                       <br />

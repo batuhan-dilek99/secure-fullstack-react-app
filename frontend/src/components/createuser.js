@@ -99,7 +99,7 @@ function CreateUser(){
                         <label htmlFor="password">Password</label>
                         <input type="password" placeholder='Enter password' className='form-control' id="password" name="password"/>
                     </div>
-                        <button type="submit" className='btn btn-success'>Create Account</button>
+                        <button type='submit' className='btn btn-success w3-deep-purple'>Create Account</button>
                 </form>
             </div>
         </div>

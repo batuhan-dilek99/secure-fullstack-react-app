@@ -1,11 +1,12 @@
 import React from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import PropTypes from 'prop-types';
-
+import { useHistory } from 'react-router-dom/cjs/react-router-dom.min';
 
 function Account({ setToken }, token){
 
     var success = 1;
+    const history = useHistory();
 
     const submit = async e => {
         e.preventDefault();
@@ -70,6 +71,7 @@ function Account({ setToken }, token){
                         sessionStorage.setItem('token', JSON.stringify(data));  //Read the new token with new username and store it into browser. 
                     })
                 })
+                .then(history.push('/home'))
                 success = 1;
         }
 
@@ -78,30 +80,38 @@ function Account({ setToken }, token){
 
     if(success){
         return (
-            <div>
-                <h1>Manage your account</h1>
-                <form onSubmit={submit}>
-                    <input type='text' placeholder='New username' name='username' id='username'></input>
-                    <input type='text' placeholder='New email' name='email' id='email'></input>
-                    <input type='password' placeholder='New password' name='password' id='password'></input>
-                    <input type='file' placeholder='New file' name='file' id='file'></input>
-                    <button type='submit'>Submit</button>
-                </form>
+            <div className='d-flex justify-content-center align-items-center'>
+                <div className='p-3 bg-white w-25'>
+                    <h1>Manage your account</h1>
+                    <form onSubmit={submit}>
+                        Username<br></br>
+                        <input type='text' placeholder='New username' name='username' id='username'></input><br></br><br></br>
+                        Email<br></br>
+                        <input type='text' placeholder='New email' name='email' id='email'></input><br></br><br></br>
+                        Password<br></br>
+                        <input type='password' placeholder='New password' name='password' id='password'></input><br></br><br></br>
+                        Profile picture<br></br>
+                        <input type='file' placeholder='New file' name='file' id='file'></input><br></br><br></br>
+                        <button type='submit' className='btn btn-success w3-deep-purple'>Submit</button>
+                    </form>
+                </div>
             </div>
         );
     }
     else {
         return(
-            <div>
-                <h1>Manage your account</h1>
-                {window.alert("An Error has been occured. Please try again.")}
-                <form onSubmit={submit}>
-                    <input type='text' placeholder='New username' name='username' id='username'></input>
-                    <input type='text' placeholder='New email' name='email' id='email'></input>
-                    <input type='password' placeholder='New password' name='password' id='password'></input>
-                    <input type='file' placeholder='New file' name='file' id='file'></input>
-                    <button type='submit'>Submit</button>
-                </form>
+            <div className='d-flex justify-content-center align-items-center'>
+                <div className='p-3 bg-white w-25'>
+                    <h1>Manage your account</h1>
+                    {window.alert("An Error has been occured. Please try again.")}
+                    <form onSubmit={submit}>
+                        <input type='text' placeholder='New username' name='username' id='username'></input>
+                        <input type='text' placeholder='New email' name='email' id='email'></input>
+                        <input type='password' placeholder='New password' name='password' id='password'></input>
+                        <input type='file' placeholder='New file' name='file' id='file'></input>
+                        <button type='submit'>Submit</button>
+                    </form>
+                </div>
             </div>
         )
     }

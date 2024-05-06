@@ -112,7 +112,7 @@ app.use('/login', (req, res) => {
                             status:502,
                         });
                     }
-                    else{
+                    else if(data && data.length > 0){
                     const comparison = bcrypt.compareSync(req.body.password, data[0].password_hash);  //Compare the password with the bcrypt version
 
                     //Create a JWT token to keep track of the user. 

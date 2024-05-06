@@ -48,7 +48,7 @@ function Userpage(){
                       {/* Profile */}
                       <div className="w3-card w3-round w3-white">
                         <div className="w3-container">
-                          <h4 className="w3-center">My Profile</h4>
+                          <h4 className="w3-center">{userData.username}</h4>
                           <p className="w3-center"><img src={userData.file} className="w3-circle" style={{height: '106px', width: '106px'}} alt="Avatar" /></p>
                           <h4 className="w3-center">{userData.username}</h4>
                           <hr />
